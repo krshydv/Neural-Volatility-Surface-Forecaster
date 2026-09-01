@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/*
+  Design system: Hermes Forecast (visual language transplant)
+  Reference sources: NOUS Portal (dashboard chrome) + Hermes Agent (editorial site)
+  Palette: electric blue + white, editorial serif + technical mono.
+
+  Fonts: intended pairing is Fraunces (display serif — closest high-contrast
+  editorial match to Bodoni Moda) + DM Mono (interface/technical), matching
+  the CLAUDE.md convention already established for this repo's previous
+  IBM Plex pairing. This sandbox's network allowlist doesn't include
+  fonts.googleapis.com (next/font/google build fails with a 403 here — same
+  issue already documented for the prior font), so --font-display and
+  --font-mono currently resolve to system stacks below. To get the intended
+  look when deploying somewhere with normal internet access, either:
+    (a) restore `Fraunces` / `DM_Mono` via next/font/google in layout.tsx
+        and thread their `.variable` classes onto <html>, or
+    (b) self-host the two font files and declare them with @font-face here.
+  Either way, only this file and layout.tsx need to change — every
+  component already reads font-family via var(--font-display) / var(--font-mono).
+*/
+
+:root {
+  /* Core semantic tokens */
+  --color-primary: #0b08f5;
+  --color-primary-hover: #0906d1;
+  --color-primary-active: #0705ad;
+  --color-primary-soft: #eceafe;
+  --color-primary-deep: #100fae;
+
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5fd;
+
+  --color-text-primary: #0a0a2e;
+  --color-text-secondary: #55557e;
+  --color-text-muted: #9797b8;
+  --color-text-inverse: #ffffff;
+  --color-text-inverse-muted: #b3b2ef;
+
+  --color-border: #dcdcf0;
+  --color-border-strong: #0b08f5;
+
+  --color-danger: #c23b3b;
+  --color-danger-soft: #f9e9e9;
+
+  /* Legacy alias kept only for the pulse-mark accent stroke */
+  --color-accent: var(--color-primary);
+
+  /* Aliases for the previous dark/amber token names, so pages written
+     against the old design system (analytics/research/markets pages built
+     after this redesign was originally exported) pick up the new palette
+     automatically instead of breaking or staying dark. New pages should
+     use the --color-primary/background/surface/text-* names directly. */
+  --color-ink: var(--color-background);
+  --color-panel: var(--color-surface);
+  --color-panel-raised: var(--color-surface-muted);
+  --color-line: var(--color-border);
+  --color-text-tertiary: var(--color-text-muted);
+  --color-accent-amber: var(--color-primary);
+  --color-accent-amber-dim: var(--color-primary-soft);
+  --color-accent-cyan: var(--color-primary);
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-active: var(--color-primary-active);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-primary-deep: var(--color-primary-deep);
+
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-inverse: var(--color-text-inverse);
+  --color-text-inverse-muted: var(--color-text-inverse-muted);
+
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+
+  --color-ink: var(--color-ink);
+  --color-panel: var(--color-panel);
+  --color-panel-raised: var(--color-panel-raised);
+  --color-line: var(--color-line);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-accent-amber: var(--color-accent-amber);
+  --color-accent-amber-dim: var(--color-accent-amber-dim);
+  --color-accent-cyan: var(--color-accent-cyan);
+
+  --font-display: "Fraunces", "DM Serif Display", ui-serif, Georgia, serif;
+  --font-mono: "DM Mono", "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-text-primary);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section label — "// OVERVIEW" style technical breadcrumb */
+.label-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Solid tag chip — white block on blue, used for sidebar/nav group headers
+   (matches the NOUS Portal reference's "ACCOUNT" / "CLOUD" chip treatment) */
+.label-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  display: inline-block;
+  background: var(--color-text-inverse);
+  color: var(--color-primary);
+  padding: 3px 9px;
+  border-radius: 2px;
+}
+
+/* Solid blue placeholder block, used in feature grids in place of imagery */
+.image-block {
+  background: var(--color-primary);
+}
+
+/* Rectangular button system, states handled via utility classes at call site */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  border-radius: 2px;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+@keyframes pulse-trace {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-trace {
+  animation: pulse-trace 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-trace {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Subtle scroll-reveal, applied via IntersectionObserver-driven class toggle */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Faint dot-matrix texture, used extremely sparingly on blue surfaces */
+.texture-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
