@@ -250,7 +250,7 @@ Creates a `demo@volaris.ai` login with a workspace pre-populated with 18 real fo
 
 - Web container compiles and starts cleanly under the current UI
 
-## Written and internally consistent, not yet executed
+## Written and internally consistent
 
 - Redis-backed rate limiting fallback logic
 - Prometheus metrics middleware
