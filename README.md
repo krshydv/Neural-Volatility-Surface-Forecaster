@@ -1,27 +1,26 @@
-# HERMES FORECAST : Neural Volatility Surface Forecaster 
+# HERMES FORECAST : Neural Volatility Surface Forecaster
 
-An enterprise-grade quantitative finance platform for **implied volatility surface construction, neural forecasting, options analytics, and deep learning–driven market prediction systems**.
+A quantitative finance platform for **implied volatility surface construction, neural forecasting, options analytics, and market regime detection**.
 
-The platform combines modern quantitative research infrastructure with scalable backend systems, real-time analytics, ML training pipelines, and production-ready deployment architecture.
+The platform combines a real FastAPI/PostgreSQL backend, a from-scratch neural forecasting engine, options analytics, and a Next.js frontend — with an explicit, honest record of what's been executed and verified versus written-but-unverified at every stage (see `docs/PROJECT_STATE.md`).
 
 ---
 
 # Overview
 
-This project is designed to model and forecast implied volatility surfaces using **Deep Learning**, quantitative finance techniques, and advanced options analytics.
+This project models and forecasts implied volatility surfaces using a from-scratch neural forecasting engine, closed-form and numerical quantitative finance techniques, and options analytics.
 
 The system integrates:
 
 - Volatility surface construction pipelines
-- Neural forecasting models
+- A from-scratch NumPy LSTM forecasting model (plus an MLP baseline)
 - Options chain analytics
-- Time-series learning infrastructure
-- Real-time market data processing
-- Production-grade backend APIs
-- Interactive frontend dashboards
-- Containerized deployment architecture
+- Market regime detection (from-scratch k-means)
+- A real, JWT-authenticated backend API
+- An interactive Next.js frontend dashboard
+- Docker Compose deployment, with Kubernetes manifests written but not yet applied to a real cluster
 
-The objective is to create a scalable quantitative research platform for volatility modeling, options analytics, and institutional-grade forecasting workflows.
+The objective is a quantitative research platform for volatility modeling and options analytics, built incrementally and documented honestly at each step rather than presented as a finished institutional product.
 
 ---
 
@@ -29,10 +28,10 @@ The objective is to create a scalable quantitative research platform for volatil
 
 ## Quantitative Finance Engine
 
-- Implied volatility computation
-- Black-Scholes inversion
-- Volatility surface generation
-- Greeks computation
+- Implied volatility computation (Newton-Raphson with a Brent fallback)
+- Black-Scholes pricing and inversion
+- Volatility surface generation and interpolation
+- Full Greeks computation (delta, gamma, theta, vega, rho)
 - Options chain analytics
 - Smile and skew analysis
 - Historical volatility analytics
@@ -40,15 +39,12 @@ The objective is to create a scalable quantitative research platform for volatil
 
 ---
 
-## Deep Learning Infrastructure
+## Forecasting
 
-- LSTM forecasting models
-- Transformer-based architectures
-- Time-series volatility prediction
-- PyTorch training pipelines
-- Hyperparameter optimization
-- Feature engineering workflows
-- Model evaluation framework
+- From-scratch NumPy LSTM (manual forward/backward pass, full BPTT)
+- MLP baseline kept selectable for comparison
+- Autoregressive multi-day volatility forecasting with confidence bounds
+- Celery-based async training-job queue, Redis as broker
 
 ---
 
@@ -56,22 +52,19 @@ The objective is to create a scalable quantitative research platform for volatil
 
 - Surface interpolation
 - Strike-expiry mapping
-- Volatility clustering analysis
-- Market regime detection
-- Scenario analysis
-- Statistical arbitrage insights
-- Cross-asset volatility comparison
+- Market regime detection (from-scratch k-means over rolling realized volatility)
+- Scenario analysis (shocked-chain repricing through the same tested Black-Scholes engine)
 
 ---
 
 ## Frontend Dashboard
 
 - Interactive volatility surface visualization
-- Real-time options analytics
-- Multi-page Next.js frontend
-- Neural forecast monitoring
-- Strategy research panels
-- Training metrics visualization
+- Options chain analytics
+- Multi-page Next.js frontend (Dashboard, Markets, Research, Analytics)
+- Forecast Lab with model selector (LSTM / MLP)
+- Model Experiments run log
+- Command palette (⌘K)
 
 ---
 
@@ -79,23 +72,21 @@ The objective is to create a scalable quantitative research platform for volatil
 
 - FastAPI backend services
 - REST API architecture
-- Websocket communication layer
-- Authentication system
-- Redis integration
-- PostgreSQL integration
-- MLflow experiment tracking
+- Real JWT authentication (access + refresh tokens), plus optional Google OAuth login
+- Redis integration (rate limiting, Celery broker)
+- PostgreSQL integration via SQLAlchemy 2.0 + Alembic
+- Client-persisted run log for forecast experiments (not a full experiment-tracking system — no artifact storage or versioning)
 
 ---
 
 ## Infrastructure & Deployment
 
-- Docker Compose orchestration
-- Kubernetes deployment manifests
-- NGINX reverse proxy
-- Prometheus monitoring
-- Grafana dashboards
-- Healthcheck systems
-- Runtime validation pipelines
+- Docker Compose orchestration (7 services: postgres, redis, api, celery worker, web, prometheus, grafana) — verified to build and start cleanly
+- Kubernetes manifests (namespace, Deployments/StatefulSets, HPA, PodDisruptionBudgets, NetworkPolicy, ingress) — written, **not yet applied to a real cluster**
+- Prometheus monitoring (`/metrics` endpoint, scrape config)
+- Grafana dashboards (request rate, p95 latency, 429 rate)
+- Postgres/Redis healthchecks
+- `infra/nginx/` scaffolding present, not built out
 
 ---
 
@@ -112,14 +103,11 @@ The objective is to create a scalable quantitative research platform for volatil
 
 ---
 
-## Machine Learning & Quant
+## Quant / ML
 
-- PyTorch
 - NumPy
-- Pandas
 - SciPy
-- Scikit-learn
-- Statsmodels
+- From-scratch LSTM and MLP (no PyTorch dependency)
 
 ---
 
@@ -128,42 +116,34 @@ The objective is to create a scalable quantitative research platform for volatil
 - Next.js
 - React
 - TypeScript
-- Zustand
-- React Query
+- Tailwind CSS
+- Vitest + Testing Library
 
 ---
 
 ## DevOps & Infrastructure
 
 - Docker
-- Kubernetes
-- NGINX
+- Kubernetes (manifests written, unverified against a real cluster)
 - Prometheus
 - Grafana
-- MLflow
 
 ---
 
 # Architecture
 
 ```text
-Frontend (Next.js)
-        │
+Next.js frontend (apps/web)
+        │  REST, JWT bearer auth
         ▼
-NGINX Reverse Proxy
-        │
-        ▼
-FastAPI Backend Services
-        │
- ┌──────┼─────────┐
- ▼      ▼         ▼
-Redis  PostgreSQL MLflow
- │
- ▼
-Celery Workers
- │
- ▼
-Neural Forecasting + Quant Engine
+FastAPI backend (apps/api)
+ ┌──────┼──────────┐
+ ▼      ▼          ▼
+Redis  PostgreSQL  Celery worker
+ │                  │
+ ▼                  ▼
+Rate limiter /   Async forecast
+Job broker       training jobs
 ```
 
 ---
@@ -171,36 +151,37 @@ Neural Forecasting + Quant Engine
 # Project Structure
 
 ```text
-Neural-Volatility-Surface-Forecaster/
+volaris/
 │
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── quant/
-│   │   ├── forecasting/
-│   │   ├── websocket/
-│   │   ├── middleware/
-│   │   └── db/
-│   │
-│   ├── scripts/
-│   └── tests/
-│
-├── frontend/
-│   ├── src/
+├── apps/
+│   ├── api/
 │   │   ├── app/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── store/
-│   │   └── lib/
+│   │   │   ├── api/v1/
+│   │   │   ├── quant/
+│   │   │   ├── forecasting/
+│   │   │   ├── analytics/
+│   │   │   ├── workers/
+│   │   │   ├── models/
+│   │   │   ├── repositories/
+│   │   │   ├── services/
+│   │   │   └── core/
+│   │   ├── scripts/
+│   │   └── tests/
 │   │
-│   └── public/
+│   └── web/
+│       ├── app/
+│       ├── components/
+│       ├── lib/
+│       └── public/
 │
-├── infra/
+├── infrastructure/
 │   ├── kubernetes/
 │   ├── nginx/
 │   ├── prometheus/
 │   └── grafana/
 │
+├── scripts/
+│   └── seed_demo_data.py
 ├── datasets/
 ├── notebooks/
 ├── docker-compose.yml
@@ -215,7 +196,7 @@ Neural-Volatility-Surface-Forecaster/
 ## Clone Repository
 
 ```bash
-git clone https://github.com/your-username/Neural-Volatility-Surface-Forecaster.git
+git clone https://github.com/krshydv/Neural-Volatility-Surface-Forecaster.git
 ```
 
 ## Move Into Project Directory
@@ -230,6 +211,14 @@ cd Neural-Volatility-Surface-Forecaster
 docker compose up --build
 ```
 
+## Optional: Seed Demo Data
+
+```bash
+docker compose exec api python scripts/seed_demo_data.py
+```
+
+Creates a `demo@volaris.ai` login with a workspace pre-populated with 18 real forecast runs (password printed to stdout).
+
 ---
 
 # Services
@@ -238,7 +227,6 @@ docker compose up --build
 |---|---|
 | Frontend | 3000 |
 | Backend API | 8000 |
-| MLflow | 5000 |
 | Grafana | 3001 |
 | Prometheus | 9090 |
 | PostgreSQL | 5432 |
@@ -248,67 +236,53 @@ docker compose up --build
 
 # Project Status
 
-## Completed
+## Verified end-to-end (live HTTP against a real Postgres, 123+ backend tests)
 
-- Volatility surface generation engine
-- Neural forecasting pipeline
-- FastAPI backend architecture
-- Multi-page frontend dashboard
-- Real-time websocket infrastructure
-- Options analytics system
-- Historical volatility analysis
-- Dockerized deployment stack
-- Kubernetes deployment manifests
-- Prometheus monitoring integration
-- Grafana dashboard provisioning
-- MLflow experiment tracking
-- Runtime validation pipelines
-- NGINX reverse proxy integration
-- Redis and PostgreSQL integration
-- Healthcheck and readiness systems
-- Runtime stabilization improvements
-- Security hardening foundation
-- Deployment orchestration system
+- Auth, workspaces, options chain, volatility surface
+- Greeks, quant pricing
+- Regime detection, scenario lab, risk analytics
+
+## Verified standalone (real execution, not just written)
+
+- LSTM forecasting model and the full forecast pipeline
+
+## Verified via an actual Docker build
+
+- Web container compiles and starts cleanly under the current UI
+
+## Written and internally consistent, not yet executed
+
+- Redis-backed rate limiting fallback logic
+- Prometheus metrics middleware
+- Celery training-job queue
+- Google OAuth login flow
+- All Kubernetes manifests
 
 ---
 
-# Production Capabilities
+# Honest Scope
 
-- Enterprise-ready backend architecture
-- Real-time analytics infrastructure
-- Deep learning forecasting workflows
-- Quantitative volatility modeling
-- Distributed service orchestration
-- Monitoring and observability stack
-- Containerized deployment support
-- Kubernetes-native infrastructure
-- Scalable websocket communication
-- Experiment tracking and analytics
+This is not presented as an institutional or production-grade system. It's a real, working quantitative research platform with a genuine backend, real tests, and a documented, session-by-session record — in `docs/PROJECT_STATE.md` — of exactly what has and hasn't been proven to work, including bugs that were hit and fixed along the way (a missing dependency, a lockfile mismatch, a Docker volume misconfiguration). No claim in this README goes beyond what's actually demonstrable in the codebase.
 
 ---
 
 # Monitoring & Observability
 
-- Prometheus metrics
-- Grafana dashboards
-- Runtime healthchecks
-- Service readiness probes
-- API monitoring
-- Training telemetry
-- Infrastructure observability
+- Prometheus metrics endpoint (`/metrics`)
+- Grafana dashboards (request rate, p95 latency, 429 rate)
+- Postgres/Redis healthchecks
+- Kubernetes readiness/liveness probes (in the unverified manifests)
 
 ---
 
 # Future Expansion Goals
 
-- Live options market integration
+- Live options market data integration
 - Multi-asset volatility forecasting
-- Transformer-based market prediction
-- Institutional-grade risk systems
-- Distributed deep learning training
-- Cloud-native scaling
-- Advanced quantitative analytics
-- Automated model evaluation
+- A larger/framework-backed model (PyTorch) alongside the current from-scratch LSTM
+- Real experiment tracking with model versioning
+- Apply and verify the Kubernetes manifests against a real cluster
+- Frontend test coverage for the analytics/research pages
 
 ---
 
@@ -322,4 +296,4 @@ This project is licensed under the MIT License.
 
 ## KRISH YADAV
 
-Developed as a full-stack quantitative finance and deep learning research platform focused on implied volatility forecasting, scalable options analytics, and production-grade quantitative systems.
+Built as a full-stack quantitative finance research platform focused on implied volatility forecasting, options analytics, and honest, verifiable engineering documentation.
